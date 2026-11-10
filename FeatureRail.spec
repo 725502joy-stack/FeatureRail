@@ -8,8 +8,9 @@ project_root = Path(SPECPATH)
 ffmpeg_path = Path(os.environ["FEATURERAIL_FFMPEG"]).resolve()
 notices_path = Path(os.environ["FEATURERAIL_NOTICES"]).resolve()
 ffmpeg_license_path = Path(os.environ["FEATURERAIL_FFMPEG_LICENSE"]).resolve()
+ffmpeg_build_info_path = Path(os.environ["FEATURERAIL_FFMPEG_BUILD_INFO"]).resolve()
 
-for required_file in (ffmpeg_path, notices_path, ffmpeg_license_path):
+for required_file in (ffmpeg_path, notices_path, ffmpeg_license_path, ffmpeg_build_info_path):
     if not required_file.is_file():
         raise FileNotFoundError(f"Required packaging file not found: {required_file}")
 
@@ -20,6 +21,7 @@ a = Analysis(
     datas=[
         (str(notices_path), "licenses"),
         (str(ffmpeg_license_path), "licenses"),
+        (str(ffmpeg_build_info_path), "licenses"),
     ],
     hiddenimports=[],
     hookspath=[],

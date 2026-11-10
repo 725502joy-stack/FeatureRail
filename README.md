@@ -44,7 +44,7 @@ On 64-bit Windows, run `setup.ps1`, then provide a 64-bit FFmpeg executable and 
 .\build.ps1 -FfmpegPath "C:\path\to\ffmpeg.exe" -FfmpegLicensePath "C:\path\to\FFmpeg-LICENSE.txt"
 ```
 
-The output is `dist\FeatureRail.exe`. The executable bundles FFmpeg as a separate command-line process. The build embeds the supplied FFmpeg license and third-party notices. FFmpeg's enabled configuration determines additional licensing and corresponding-source obligations; see the [FFmpeg legal page](https://ffmpeg.org/legal.html) and include the applicable source and build materials with any public binary distribution.
+The output is `dist\FeatureRail.exe`. The executable bundles FFmpeg as a separate command-line process, including its license, build configuration, and vendor dependency-version manifest. For a public binary release, use `tools/package_ffmpeg_sources.ps1` to prepare the matching FFmpeg source snapshot and third-party source index for the release assets. Third-party components retain their own licenses; see the [FFmpeg legal page](https://ffmpeg.org/legal.html).
 
 ## Interface languages
 

@@ -39,6 +39,7 @@ $buildRoot = Join-Path $projectRoot ".build"
 New-Item -ItemType Directory -Force -Path $buildRoot | Out-Null
 $noticesPath = Join-Path $buildRoot "THIRD_PARTY_NOTICES.txt"
 $licenseCopyPath = Join-Path $buildRoot "FFmpeg-LICENSE.txt"
+$buildInfoPath = Join-Path $buildRoot "FFmpeg-BUILD-INFO.txt"
 Copy-Item -LiteralPath $ffmpegLicense -Destination $licenseCopyPath -Force
 
 $readmePath = Join-Path (Split-Path -Parent (Split-Path -Parent $ffmpegExe)) "README.txt"
@@ -47,6 +48,24 @@ if (Test-Path -LiteralPath $readmePath) {
     $readmeSource = Select-String -Path $readmePath -Pattern '^Source Code:\s*(.+)$' | Select-Object -First 1
     if ($readmeSource) { $sourceLine = "Source code: $($readmeSource.Matches[0].Groups[1].Value.Trim())" }
 }
+$buildConfOutPath = Join-Path $buildRoot "FFmpeg-buildconf.stdout.txt"
+$buildConfErrorPath = Join-Path $buildRoot "FFmpeg-buildconf.stderr.txt"
+$buildConfProcess = Start-Process -FilePath $ffmpegExe -ArgumentList "-buildconf" -NoNewWindow -Wait -PassThru -RedirectStandardOutput $buildConfOutPath -RedirectStandardError $buildConfErrorPath
+if ($buildConfProcess.ExitCode -ne 0) { throw "Failed to read the FFmpeg build configuration." }
+$buildConf = (@(Get-Content -LiteralPath $buildConfOutPath) + @(Get-Content -LiteralPath $buildConfErrorPath)) -join "`n"
+$vendorReadme = if (Test-Path -LiteralPath $readmePath) { Get-Content -LiteralPath $readmePath -Raw } else { "Vendor build README was not supplied." }
+@"
+FeatureRail bundled FFmpeg build information
+
+$ffmpegVersion
+$sourceLine
+
+Exact configure/build options reported by the bundled binary:
+$buildConf
+
+Vendor build README and external library version list:
+$vendorReadme
+"@ | Set-Content -LiteralPath $buildInfoPath -Encoding utf8
 
 $noticeText = @"
 FeatureRail is licensed under the MIT License. See the project LICENSE.
@@ -68,6 +87,7 @@ Set-Content -LiteralPath $noticesPath -Value $noticeText -Encoding utf8
 $env:FEATURERAIL_FFMPEG = $ffmpegExe
 $env:FEATURERAIL_NOTICES = $noticesPath
 $env:FEATURERAIL_FFMPEG_LICENSE = $licenseCopyPath
+$env:FEATURERAIL_FFMPEG_BUILD_INFO = $buildInfoPath
 
 Write-Host "Installing build tooling..." -ForegroundColor Cyan
 & $pythonExe -m pip install -r (Join-Path $projectRoot "requirements-build.txt")
